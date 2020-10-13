@@ -80,23 +80,23 @@ class Scratch3NewBlocks {
         
 
         //mycode
-        try {
-            const con = new WebSocket('ws://localhost:8081/');
+        // try {
+        //     const con = new WebSocket('ws://localhost:8081/');
             
-            con.onopen = function() {
-                console.log('coを開始しました');
-                con.send('Hello WebSocket!');
-            };
+        //     con.onopen = function() {
+        //         console.log('coを開始しました');
+        //         con.send('Hello WebSocket!');
+        //     };
 
-            con.onmessage = function(msg) {
-                alert(msg.data);
-                console.log(msg.data);
-            };
-            // con.close();
+        //     con.onmessage = function(msg) {
+        //         alert(msg.data);
+        //         console.log(msg.data);
+        //     };
+        //     // con.close();
 
-        } catch (error) {
-            console.log(error);
-        }
+        // } catch (error) {
+        //     console.log(error);
+        // }
         
     }
 
@@ -110,3 +110,38 @@ class Scratch3NewBlocks {
 }
 
 module.exports = Scratch3NewBlocks;
+
+
+// 拡張機能が呼び出されたときにwebsocketでの通信を開始する
+const con = new WebSocket('ws://localhost:8081/');
+try {
+    var data = {};
+    data['code'] = 0;
+
+    con.onopen = function() {
+        console.log('coを開始しました');
+        con.send(JSON.stringify(data));
+    };
+    // con.close();
+
+} catch (error) {
+    console.log(error);
+}
+
+con.onmessage = function(msg) {
+    alert(msg.data);
+    console.log(msg.data);
+};
+
+function sendData(code, data) {
+    data['code'] = code;
+    data['ID'] = ID;
+    console.log('送るデータ:' + JSON.stringify(data));
+
+    try {
+        con.send(JSON.stringify(data));
+        // con.close();
+    } catch (error) {
+        console.log(error);
+    }
+}
