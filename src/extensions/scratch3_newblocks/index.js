@@ -81,7 +81,7 @@ class Scratch3NewBlocks {
 
         //mycode
         try {
-            const con = new WebSocket('ws://localhost:8081');
+            const con = new WebSocket('ws://localhost:8081/');
             
             con.onopen = function() {
                 console.log('coを開始しました');
@@ -92,12 +92,11 @@ class Scratch3NewBlocks {
                 alert(msg.data);
                 console.log(msg.data);
             };
-            //con.close();
+            // con.close();
 
         } catch (error) {
             console.log(error);
         }
-        
         
     }
 
