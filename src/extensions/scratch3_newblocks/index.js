@@ -3,6 +3,61 @@ const BlockType = require('../../extension-support/block-type');
 const Cast = require('../../util/cast');
 const log = require('../../util/log');
 
+var ID = 0;
+
+var sensor = {
+    alpha : 0,
+    beta : 0,
+    gamma : 0,
+    acceleration_x : 0,
+    acceleration_y : 0,
+    acceleration_z : 0
+  };
+
+// 拡張機能が呼び出されたときにwebsocketでの通信を開始する
+const con = new WebSocket('ws://localhost:8081/');
+try {
+    var data = {};
+    data['code'] = 0;
+
+    con.onopen = function() {
+        console.log('coを開始しました');
+        con.send(JSON.stringify(data));
+    };
+    // con.close();
+
+} catch (error) {
+    console.log(error);
+}
+
+con.onmessage = function(msg) {
+    console.log(msg.data);
+
+    var res = JSON.parse(msg.data);
+    var code = res['code'];
+
+    switch(code) {
+        case 0:
+            break;
+        case 3:
+            sensor.alpha = res['alpha'];
+    }
+};
+
+function sendData(code, data) {
+    data['code'] = code;
+    data['ID'] = ID;
+    console.log('送るデータ:' + JSON.stringify(data));
+
+    try {
+        con.send(JSON.stringify(data));
+        // con.close();
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+
 /**
  * Icon svg to be displayed at the left edge of each extension block, encoded as a data URI.
  * @type {string}
@@ -47,18 +102,18 @@ class Scratch3NewBlocks {
             blockIconURI: blockIconURI,
             blocks: [
                 {
-                    opcode: 'writeLog',
+                    opcode: 'setID',
                     blockType: BlockType.COMMAND,
-                    text: 'log [TEXT]',
+                    text: 'IDを [ID] にする',
                     arguments: {
-                        TEXT: {
-                            type: ArgumentType.STRING,
-                            defaultValue: "hello"
+                        ID: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 0
                         }
                     }
                 },
                 {
-                    opcode: 'getBrowser',
+                    opcode: 'getAlpha',
                     text: 'browser',
                     blockType: BlockType.REPORTER
                 }
@@ -71,12 +126,19 @@ class Scratch3NewBlocks {
     /**
      * Write log.
      * @param {object} args - the block arguments.
-     * @property {number} TEXT - the text.
+     * @property {number} ID - the text.
      */
-    writeLog (args) {
+    setID (args) {
         
-        const text = Cast.toString(args.TEXT);
-        log.log(text);
+        var inputNumber = Cast.toNumber(args.ID);
+
+        //IDが0~50の範囲の場合IDを上書きする
+        if (0 < inputNumber&& inputNumber <= 50) {
+            ID = inputNumber;
+        }
+
+        console.log('ID = ' + ID);
+        log.log(inputNumber);
         
     }
 
@@ -84,44 +146,15 @@ class Scratch3NewBlocks {
      * Get the browser.
      * @return {number} - the user agent.
      */
-    getBrowser () {
-        return navigator.userAgent;
+    getAlpha () {
+        var data = {};
+        sendData(3, data);
+
+        return sensor.alpha;
+        // return navigator.userAgent;
     }
 }
 
 module.exports = Scratch3NewBlocks;
 
 
-// 拡張機能が呼び出されたときにwebsocketでの通信を開始する
-const con = new WebSocket('ws://localhost:8081/');
-try {
-    var data = {};
-    data['code'] = 0;
-
-    con.onopen = function() {
-        console.log('coを開始しました');
-        con.send(JSON.stringify(data));
-    };
-    // con.close();
-
-} catch (error) {
-    console.log(error);
-}
-
-con.onmessage = function(msg) {
-    alert(msg.data);
-    console.log(msg.data);
-};
-
-function sendData(code, data) {
-    data['code'] = code;
-    data['ID'] = ID;
-    console.log('送るデータ:' + JSON.stringify(data));
-
-    try {
-        con.send(JSON.stringify(data));
-        // con.close();
-    } catch (error) {
-        console.log(error);
-    }
-}
