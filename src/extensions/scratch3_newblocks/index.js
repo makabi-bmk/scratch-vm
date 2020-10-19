@@ -113,8 +113,19 @@ class Scratch3NewBlocks {
                     }
                 },
                 {
+                    opcode: 'getMessage',
+                    blockType: BlockType.COMMAND,
+                    text: ' [message] と言う',
+                    arguments: {
+                        message: {
+                            type: ArgumentType.STRING,
+                            defaultValue: "こんにちは"
+                        }
+                    }
+                },
+                {
                     opcode: 'getAlpha',
-                    text: 'browser',
+                    text: 'alphaの値',
                     blockType: BlockType.REPORTER
                 }
             ],
@@ -142,6 +153,15 @@ class Scratch3NewBlocks {
         
     }
 
+    getMessage (args) {
+        
+        var inputMessage = Cast.toNumber(args.message);
+        console.log('message = ' + inputMessage);
+        log.log(inputMessage);
+        
+    }
+
+
     /**
      * Get the browser.
      * @return {number} - the user agent.
@@ -153,6 +173,8 @@ class Scratch3NewBlocks {
         return sensor.alpha;
         // return navigator.userAgent;
     }
+
+
 }
 
 module.exports = Scratch3NewBlocks;
