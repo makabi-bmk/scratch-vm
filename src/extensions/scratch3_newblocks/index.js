@@ -2,59 +2,93 @@ const ArgumentType = require('../../extension-support/argument-type');
 const BlockType = require('../../extension-support/block-type');
 const Cast = require('../../util/cast');
 const log = require('../../util/log');
+const header = require('./header');
 
-var ID = 0;
-
-var sensor = {
-    alpha : 0,
-    beta : 0,
-    gamma : 0,
-    acceleration_x : 0,
-    acceleration_y : 0,
-    acceleration_z : 0
-  };
+var scratchID = 0;
+var isCommunicatable = true;
+var sensorData = header.sensorData;
+var orderData = header.orderData;
+const DATA_NAME = header.DATA_NAME;
+const REQUEST = header.REQUEST;
 
 // 拡張機能が呼び出されたときにwebsocketでの通信を開始する
 const con = new WebSocket('ws://localhost:8081/');
 try {
-    var data = {};
-    data['code'] = 0;
-
     con.onopen = function() {
         console.log('coを開始しました');
-        con.send(JSON.stringify(data));
+        sendData(1);
+        setInterval(connectSmartphone, 1000);
     };
-    // con.close();
-
 } catch (error) {
     console.log(error);
 }
 
-con.onmessage = function(msg) {
-    console.log(msg.data);
+var connectSmartphone = function() {
+    if (scratchID != 0 && orderData.smartphone_ID != 0) sendData(2);
+}
 
-    var res = JSON.parse(msg.data);
-    var code = res['code'];
+con.onmessage = function(ms) {
+    console.log("受け取ったデータ = " + ms.data);
+    isCommunicatable = true;
+    orderData.flag = 0;
 
-    switch(code) {
-        case 0:
+    var receivedData = JSON.parse(ms.data);
+    var requestNum = receivedData[DATA_NAME.request_num];
+
+    switch(requestNum) {
+        case REQUEST.none:
             break;
-        case 3:
-            sensor.alpha = res['alpha'];
-    }
+        case REQUEST.getID:
+            scratchID = receivedData[DATA_NAME.scratch_ID];
+            orderData.scratch_ID = scratchID;
+            console.log("scratchID = " + orderData.scratch_ID);
+            break;
+        case REQUEST.connect:
+            setSensorData(receivedData);
+            break;
+    }  
 };
 
-function sendData(code, data) {
-    data['code'] = code;
-    data['ID'] = ID;
-    console.log('送るデータ:' + JSON.stringify(data));
+window.onbeforeunload = function(e) {
+    e.returnValue = "ページを離れようとしています。よろしいですか？";
+    con.close();
+}
 
+function sendData(request_num) {
+    if (isCommunicatable == false) return;
+
+    orderData.request_num = request_num;
+    console.log('送るデータ:' + JSON.stringify(orderData));
     try {
-        con.send(JSON.stringify(data));
-        // con.close();
+        con.send(JSON.stringify(orderData));
+        isCommunicatable = false;
     } catch (error) {
         console.log(error);
     }
+}
+
+function setSensorData(data) {
+    sensorData.alpha            = data[DATA_NAME.alpha];
+    sensorData.beta             = data[DATA_NAME.beta];
+    sensorData.gamma            = data[DATA_NAME.gamma];
+    sensorData.angle            = data[DATA_NAME.angle];
+    sensorData.size             = data[DATA_NAME.size];
+    sensorData.position_x       = data[DATA_NAME.position_x];
+    sensorData.position_y       = data[DATA_NAME.position_y];
+    sensorData.acceleration_x   = data[DATA_NAME.acceleration_x];
+    sensorData.acceleration_y   = data[DATA_NAME.acceleration_y];
+    sensorData.acceleration_z   = data[DATA_NAME.acceleration_z];
+    sensorData.image_num        = data[DATA_NAME.image_num];
+    sensorData.input_text       = data[DATA_NAME.input_text];
+    sensorData.voice_message    = data[DATA_NAME.voice_message];
+    sensorData.tap_position_x   = data[DATA_NAME.tap_position_x];
+    sensorData.tap_position_y   = data[DATA_NAME.tap_position_y];
+    sensorData.button_click     = data[DATA_NAME.button_click];
+    sensorData.image_touch      = data[DATA_NAME.image_touch];
+    sensorData.swipe_vertical   = data[DATA_NAME.swipe_vertical];
+    sensorData.swipe_horizontal = data[DATA_NAME.swipe_horizontal];
+
+    console.log("sensorData.alpha = " + sensorData.alpha);
 }
 
 
@@ -104,18 +138,155 @@ class Scratch3NewBlocks {
                 {
                     opcode: 'setID',
                     blockType: BlockType.COMMAND,
-                    text: 'IDを [ID] にする',
+                    text: 'IDを [smartphoneID] にする',
                     arguments: {
-                        ID: {
+                        smartphoneID: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 3
+                        }
+                    }
+                },
+                {
+                    opcode: 'setImage',
+                    blockType: BlockType.COMMAND,
+                    text: 'スキンを [imageNum] 番にする',
+                    arguments: {
+                        imageNum: {
                             type: ArgumentType.NUMBER,
                             defaultValue: 0
                         }
                     }
                 },
                 {
-                    opcode: 'getMessage',
+                    opcode: 'setBackImage',
                     blockType: BlockType.COMMAND,
-                    text: ' [message] と言う',
+                    text: '背景を [backImageNum] 番にする',
+                    arguments: {
+                        backImageNum: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 0
+                        }
+                    }
+                },
+                {
+                    opcode: 'setSize',
+                    blockType: BlockType.COMMAND,
+                    text: '大きさを [size] %ずつ変える',
+                    arguments: {
+                        size: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 0
+                        }
+                    }
+                },
+                {
+                    opcode: 'setSize2',
+                    blockType: BlockType.COMMAND,
+                    text: '大きさを [size] %にする',
+                    arguments: {
+                        size: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 0
+                        }
+                    }
+                },
+                {
+                    opcode: 'rotateRight',
+                    blockType: BlockType.COMMAND,
+                    text: '右に [angle] 度回す',
+                    arguments: {
+                        angle: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 0
+                        }
+                    }
+                },
+                {
+                    opcode: 'rotateLeft',
+                    blockType: BlockType.COMMAND,
+                    text: '左に [angle] 度回す',
+                    arguments: {
+                        angle: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 0
+                        }
+                    }
+                },
+                {
+                    opcode: 'setPosition',
+                    blockType: BlockType.COMMAND,
+                    text: 'x座標を [x]、y座標を[y]にする',
+                    arguments: {
+                        x: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 0
+                        },
+                        y: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 0
+                        }
+                    }
+                },
+                //TODO これの実装方法考える
+                {
+                    opcode: 'setPosition2',
+                    blockType: BlockType.COMMAND,
+                    text: '[x]歩動かす',
+                    arguments: {
+                        x: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 0
+                        }
+                    }
+                },
+                {
+                    opcode: 'setPositionX',
+                    blockType: BlockType.COMMAND,
+                    text: 'x座標を[x]ずつ変える',
+                    arguments: {
+                        x: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 0
+                        }
+                    }
+                },
+                {
+                    opcode: 'setPositionX2',
+                    blockType: BlockType.COMMAND,
+                    text: 'x座標を[x]にする',
+                    arguments: {
+                        x: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 0
+                        }
+                    }
+                },
+                {
+                    opcode: 'setPositionY',
+                    blockType: BlockType.COMMAND,
+                    text: 'y座標を[y]ずつ変える',
+                    arguments: {
+                        y: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 0
+                        }
+                    }
+                },
+                {
+                    opcode: 'setPositionY2',
+                    blockType: BlockType.COMMAND,
+                    text: 'y座標を[y]にする',
+                    arguments: {
+                        y: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 0
+                        }
+                    }
+                },
+                {
+                    opcode: 'setMessage',
+                    blockType: BlockType.COMMAND,
+                    text: ' [message] と表示する',
                     arguments: {
                         message: {
                             type: ArgumentType.STRING,
@@ -124,59 +295,307 @@ class Scratch3NewBlocks {
                     }
                 },
                 {
-                    opcode: 'getAlpha',
-                    text: 'alphaの値',
+                    opcode: 'setAlert',
+                    blockType: BlockType.COMMAND,
+                    text: ' [alertMessage] とアラートを表示する',
+                    arguments: {
+                        alertMessage: {
+                            type: ArgumentType.STRING,
+                            defaultValue: "こんにちは"
+                        }
+                    }
+                },
+                {
+                    opcode: 'setButtonText',
+                    blockType: BlockType.COMMAND,
+                    text: ' ボタンの文字を[text] にする',
+                    arguments: {
+                        text: {
+                            type: ArgumentType.STRING,
+                            defaultValue: "ボタン"
+                        }
+                    }
+                },
+                {
+                    opcode: 'setAudio',
+                    blockType: BlockType.COMMAND,
+                    text: '音 [audioNum] を流す',
+                    arguments: {
+                        audioNum: {
+                            type: ArgumentType.NUMBER,
+                            defaultValue: 0
+                        }
+                    }
+                },
+                {
+                    opcode: 'isImageClicked',
+                    text: 'オブジェクトが押された',
+                    blockType: BlockType.BOOLEAN,
+                },
+                {
+                    opcode: 'isButtonClicked',
+                    text: 'ボタンが押された',
+                    blockType: BlockType.BOOLEAN,
+                },
+                {
+                    opcode: 'view',
+                    blockType: BlockType.COMMAND,
+                    text: '見せる'
+                },
+                {
+                    opcode: 'hide',
+                    blockType: BlockType.COMMAND,
+                    text: 'かくす'
+                },
+                {
+                    opcode: 'reset',
+                    blockType: BlockType.COMMAND,
+                    text: '全ての設定を元に戻す',
+                },
+                {
+                    opcode: 'getInputText',
+                    text: '入力された文字',
                     blockType: BlockType.REPORTER
-                }
+                },
+                {
+                    opcode: 'getX',
+                    text: 'X座標',
+                    blockType: BlockType.REPORTER
+                },
+                {
+                    opcode: 'getY',
+                    text: 'Y座標',
+                    blockType: BlockType.REPORTER
+                },
+                {
+                    opcode: 'getAngle',
+                    text: '向き',
+                    blockType: BlockType.REPORTER
+                },
+                {
+                    opcode: 'getSize',
+                    text: '大きさ',
+                    blockType: BlockType.REPORTER
+                },
+                {
+                    opcode: 'getAlpha',
+                    text: '横方向の回転角度',
+                    blockType: BlockType.REPORTER
+                },
+                {
+                    opcode: 'getBeta',
+                    text: '縦方向の回転角度',
+                    blockType: BlockType.REPORTER
+                },
+                /*
+                {
+                    opcode: 'getGamma',
+                    text: 'z方向の回転角度',
+                    blockType: BlockType.REPORTER
+                },
+                */
+                {
+                    opcode: 'getAccelerationX',
+                    text: 'x方向の加速度',
+                    blockType: BlockType.REPORTER
+                },
+                {
+                    opcode: 'getAccelerationY',
+                    text: 'y方向の加速度',
+                    blockType: BlockType.REPORTER
+                },
+                {
+                    opcode: 'getAccelerationZ',
+                    text: 'z方向の加速度',
+                    blockType: BlockType.REPORTER
+                },
             ],
             menus: {
             }
         };
     }
 
-    /**
-     * Write log.
-     * @param {object} args - the block arguments.
-     * @property {number} ID - the text.
-     */
     setID (args) {
-        
-        var inputNumber = Cast.toNumber(args.ID);
-
+        var smartphoneID = Cast.toNumber(args.smartphoneID);
+        console.log("num = " + smartphoneID);
         //IDが0~50の範囲の場合IDを上書きする
-        if (0 < inputNumber&& inputNumber <= 50) {
-            ID = inputNumber;
+        if (0 < smartphoneID && smartphoneID <= 50) {
+            orderData.smartphone_ID = smartphoneID;
         }
-
-        console.log('ID = ' + ID);
-        log.log(inputNumber);
-        
+        console.log('ID = ' + orderData.smartphone_ID);
     }
 
-    getMessage (args) {
-        
-        var inputMessage = Cast.toNumber(args.message);
-        console.log('message = ' + inputMessage);
-        log.log(inputMessage);
-        
+    setImage (args) {
+        var num = Cast.toNumber(args.imageNum);
+        console.log("image_num = " + num);
+        orderData.image_num = num;
+        orderData.flag = orderData.flag | 4;
     }
 
+    setBackImage (args) {
+        var num = Cast.toNumber(args.backImageNum);
+        orderData.back_image_num = num;
+        orderData.flag = orderData.flag | 2;
+    }
+
+    setSize (args) {
+        var num = Cast.toNumber(args.size);
+        orderData.size = sensorData.size + num;
+        orderData.flag = orderData.flag | 128;
+    }
+
+    setSize2 (args) {
+        var num = Cast.toNumber(args.size);
+        orderData.size = num;
+        orderData.flag = orderData.flag | 128;
+    }
+
+    rotateRight (args) {
+        var num = Cast.toNumber(args.angle);
+        orderData.angle = sensorData.angle + num;
+        orderData.flag = orderData.flag | 256;
+    }
+
+    rotateLeft (args) {
+        var num = Cast.toNumber(args.angle);
+        orderData.angle = sensorData.angle + -1 * num;
+        orderData.flag = orderData.flag | 256;
+    }
+
+    setPosition (args) {
+        var x = Cast.toNumber(args.x);
+        var y = Cast.toNumber(args.y);
+        orderData.pos_x = x;
+        orderData.pos_y = y;
+        orderData.flag = orderData.flag | 64;
+    }
+
+    setPosition2 (args) {
+        var x = Cast.toNumber(args.x);
+        orderData.pos_x = x;
+        orderData.flag = orderData.flag | 64;
+    }
+
+    setPositionX (args) {
+        var x = Cast.toNumber(args.x);
+        orderData.pos_x = sensorData.position_x + x;
+        orderData.flag = orderData.flag | 64;
+    }
+
+    setPositionX2 (args) {
+        var x = Cast.toNumber(args.x);
+        orderData.pos_x = x;
+        orderData.flag = orderData.flag | 64;
+    }
+
+    setPositionY (args) {
+        var y = Cast.toNumber(args.y);
+        orderData.pos_y = sensorData.position_y + y;
+        orderData.flag = orderData.flag | 64;
+    }
+
+    setPositionY2 (args) {
+        var y = Cast.toNumber(args.x);
+        orderData.pos_y = y;
+        orderData.flag = orderData.flag | 64;
+    }
+
+    setMessage (args) {
+        var message = Cast.toString(args.message);
+        console.log('message = ' + message);
+        orderData.message = message;
+        orderData.flag = orderData.flag | 8;
+    }
+
+    setAlert (args) {
+        var message = Cast.toString(args.alertMessage);
+        console.log('alertMessage = ' + message);
+        orderData.alert_message = message;
+        orderData.flag = orderData.flag | 16;
+    }
+
+    setButtonText (args) {
+        var text = Cast.toString(args.text);
+        console.log('alertMessage = ' + text);
+        orderData.button_text = text;
+        orderData.flag = orderData.flag | 512;
+    }
+
+    setAudio (args) {
+        var num = Cast.toNumber(args.audioNum);
+        orderData.bgm_num = num;
+        orderData.flag = orderData.flag | 32;
+    }
+
+    isImageClicked () {
+        return sensorData.image_touch;
+    }
+
+    isButtonClicked () {
+        return sensorData.button_click;
+    }
+
+    view () {
+        orderData.view = true;
+        orderData.flag = orderData.flag | 1024;
+    }
+
+    hide () {
+        orderData.view = false;
+        orderData.flag = orderData.flag | 1024;
+    }
+
+    reset () {
+        orderData.flag = orderData.flag | 1;
+    }
 
     /**
      * Get the browser.
      * @return {number} - the user agent.
      */
-    getAlpha () {
-        var data = {};
-        sendData(3, data);
 
-        return sensor.alpha;
-        // return navigator.userAgent;
+    
+    getInputText() {
+        return sensorData.input_text;
     }
 
+    getX () {
+        return sensorData.position_x;
+    }
 
+    getY () {
+        return sensorData.position_y;
+    }
+
+    getAngle () {
+        return sensorData.angle;
+    }
+
+    getSize () {
+        return sensorData.size;
+    }
+
+    getAlpha () {
+        return sensorData.alpha;
+    }
+    getBeta () {
+        return sensorData.beta;
+    }
+    /*
+    getGamma () {
+        return sensorData.gamma;
+    }
+    */
+
+    getAccelerationX () {
+        return sensorData.acceleration_x;
+    }
+    getAccelerationY () {
+        return sensorData.acceleration_y;
+    }
+    getAccelerationZ () {
+        return sensorData.acceleration_z;
+    }
 }
 
 module.exports = Scratch3NewBlocks;
-
-
