@@ -142,7 +142,7 @@ class Scratch3NewBlocks {
                     arguments: {
                         smartphoneID: {
                             type: ArgumentType.NUMBER,
-                            defaultValue: 3
+                            defaultValue: 0
                         }
                     }
                 },
