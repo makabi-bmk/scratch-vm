@@ -215,7 +215,7 @@ class Scratch3NewBlocks {
                 {
                     opcode: 'setPosition',
                     blockType: BlockType.COMMAND,
-                    text: 'x座標を [x]、y座標を[y]にする',
+                    text: 'x座標を [y]、y座標を[x]にする',
                     arguments: {
                         x: {
                             type: ArgumentType.NUMBER,
@@ -228,6 +228,7 @@ class Scratch3NewBlocks {
                     }
                 },
                 //TODO これの実装方法考える
+                /*
                 {
                     opcode: 'setPosition2',
                     blockType: BlockType.COMMAND,
@@ -239,10 +240,11 @@ class Scratch3NewBlocks {
                         }
                     }
                 },
+                */
                 {
                     opcode: 'setPositionX',
                     blockType: BlockType.COMMAND,
-                    text: 'x座標を[x]ずつ変える',
+                    text: 'y座標を[x]ずつ変える',
                     arguments: {
                         x: {
                             type: ArgumentType.NUMBER,
@@ -264,7 +266,7 @@ class Scratch3NewBlocks {
                 {
                     opcode: 'setPositionY',
                     blockType: BlockType.COMMAND,
-                    text: 'y座標を[y]ずつ変える',
+                    text: 'x座標を[y]ずつ変える',
                     arguments: {
                         y: {
                             type: ArgumentType.NUMBER,
@@ -275,7 +277,7 @@ class Scratch3NewBlocks {
                 {
                     opcode: 'setPositionY2',
                     blockType: BlockType.COMMAND,
-                    text: 'y座標を[y]にする',
+                    text: 'x座標を[y]にする',
                     arguments: {
                         y: {
                             type: ArgumentType.NUMBER,
@@ -465,38 +467,43 @@ class Scratch3NewBlocks {
     setPosition (args) {
         var x = Cast.toNumber(args.x);
         var y = Cast.toNumber(args.y);
-        orderData.pos_x = x;
-        orderData.pos_y = y;
+        orderData.position_x = x;
+        orderData.position_y = y;
         orderData.flag = orderData.flag | 64;
     }
 
     setPosition2 (args) {
         var x = Cast.toNumber(args.x);
-        orderData.pos_x = x;
+        orderData.position_x = x;
+        orderData.position_y = -1;
         orderData.flag = orderData.flag | 64;
     }
 
     setPositionX (args) {
         var x = Cast.toNumber(args.x);
-        orderData.pos_x = sensorData.position_x + x;
+        orderData.position_x = sensorData.position_x + x;
+        orderData.position_y = -1;
         orderData.flag = orderData.flag | 64;
     }
 
     setPositionX2 (args) {
         var x = Cast.toNumber(args.x);
-        orderData.pos_x = x;
+        orderData.position_x = x;
+        orderData.position_y = -1;
         orderData.flag = orderData.flag | 64;
     }
 
     setPositionY (args) {
         var y = Cast.toNumber(args.y);
-        orderData.pos_y = sensorData.position_y + y;
+        orderData.position_y = sensorData.position_y + y;
+        orderData.position_x = -1;
         orderData.flag = orderData.flag | 64;
     }
 
     setPositionY2 (args) {
         var y = Cast.toNumber(args.x);
-        orderData.pos_y = y;
+        orderData.position_y = y;
+        orderData.position_x = -1;
         orderData.flag = orderData.flag | 64;
     }
 
