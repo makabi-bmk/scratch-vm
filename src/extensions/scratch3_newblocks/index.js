@@ -83,6 +83,8 @@ function setSensorData(data) {
     sensorData.voice_message    = data[DATA_NAME.voice_message];
     sensorData.tap_position_x   = data[DATA_NAME.tap_position_x];
     sensorData.tap_position_y   = data[DATA_NAME.tap_position_y];
+    sensorData.screen_height    = data[DATA_NAME.screen_height];
+    sensorData.screen_width     = data[DATA_NAME.screen_width];
     sensorData.button_click     = data[DATA_NAME.button_click];
     sensorData.image_touch      = data[DATA_NAME.image_touch];
     sensorData.swipe_vertical   = data[DATA_NAME.swipe_vertical];
@@ -318,6 +320,7 @@ class Scratch3NewBlocks {
                         }
                     }
                 },
+                /*
                 {
                     opcode: 'setAudio',
                     blockType: BlockType.COMMAND,
@@ -329,6 +332,7 @@ class Scratch3NewBlocks {
                         }
                     }
                 },
+                */
                 {
                     opcode: 'isImageClicked',
                     text: 'オブジェクトが押された',
@@ -337,6 +341,16 @@ class Scratch3NewBlocks {
                 {
                     opcode: 'isButtonClicked',
                     text: 'ボタンが押された',
+                    blockType: BlockType.BOOLEAN,
+                },
+                {
+                    opcode: 'isSwipeVertical',
+                    text: '縦にスワイプした',
+                    blockType: BlockType.BOOLEAN,
+                },
+                {
+                    opcode: 'isSwipeHorizontal',
+                    text: '横にスワイプした',
                     blockType: BlockType.BOOLEAN,
                 },
                 {
@@ -411,6 +425,16 @@ class Scratch3NewBlocks {
                     text: 'z方向の加速度',
                     blockType: BlockType.REPORTER
                 },
+                {
+                    opcode: 'getScreenHeight',
+                    text: '画面の高さ',
+                    blockType: BlockType.REPORTER
+                },
+                {
+                    opcode: 'getScreenWidth',
+                    text: '画面の幅',
+                    blockType: BlockType.REPORTER
+                }
             ],
             menus: {
             }
@@ -542,6 +566,14 @@ class Scratch3NewBlocks {
         return sensorData.button_click;
     }
 
+    isSwipeVertical () {
+        return sensorData.swipe_vertical;
+    }
+
+    isSwipeHorizontal () {
+        return sensorData.swipe_horizontal;
+    }
+
     view () {
         orderData.view = true;
         orderData.flag = orderData.flag | 1024;
@@ -602,6 +634,13 @@ class Scratch3NewBlocks {
     }
     getAccelerationZ () {
         return sensorData.acceleration_z;
+    }
+    
+    getScreenHeight() {
+        return sensorData.screen_height;
+    }
+    getScreenWidth() {
+        return sensorData.screen_width;
     }
 }
 

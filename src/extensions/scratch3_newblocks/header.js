@@ -39,7 +39,9 @@ module.exports.DATA_NAME = {
     message : "message",
     alert_message : "alert_message",
     view : "view",
-    audio_num : "audio_num"
+    audio_num : "audio_num",
+    screen_height : "screen_height",
+    screen_width : "screen_width"
 };
 
 module.exports.sensorData = {
@@ -62,6 +64,8 @@ module.exports.sensorData = {
     voice_message : "",
     tap_position_x : 0,
     tap_position_y : 0,
+    screen_height : 0,
+    screen_width : 0,
     button_click : false,
     image_touch : false,
     swipe_vertical : false,
