@@ -42,9 +42,15 @@ con.onmessage = function(ms) {
         case REQUEST.none:
             break;
         case REQUEST.getID:
-            scratchID = receivedData[DATA_NAME.scratch_ID];
-            orderData.scratch_ID = scratchID;
-            console.log("scratchID = " + orderData.scratch_ID);
+            var status = receivedData["status"];
+
+            if (status == 500) {
+                alert(receivedData["message"]);
+            } else {
+                scratchID = receivedData[DATA_NAME.scratch_ID];
+                orderData.scratch_ID = scratchID;
+                console.log("scratchID = " + orderData.scratch_ID);    
+            }
             break;
         case REQUEST.connect:
             if (scratchID == receivedData[DATA_NAME.scratch_ID]) {
@@ -617,11 +623,11 @@ class Scratch3NewBlocks {
     }
 
     getX () {
-        return sensorData.position_x;
+        return sensorData.position_y;
     }
 
     getY () {
-        return sensorData.position_y;
+        return sensorData.position_x;
     }
 
     getAngle () {
