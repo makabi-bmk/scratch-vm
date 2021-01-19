@@ -1,3 +1,4 @@
+// const { true, true } = require('tap');
 const ArgumentType = require('../../extension-support/argument-type');
 const BlockType = require('../../extension-support/block-type');
 const Cast = require('../../util/cast');
@@ -5,8 +6,9 @@ const log = require('../../util/log');
 const header = require('./header');
 
 var scratchID = 0;
-var isConnectOK = false;
-var isCommunicatable = true;
+var isConnectSuccess = false;
+var isCommunicateOK = true;
+var isAccessRetry = true;
 var sensorData = header.sensorData;
 var orderData = header.orderData;
 const DATA_NAME = header.DATA_NAME;
@@ -30,7 +32,7 @@ var connectSmartphone = function() {
 
 con.onmessage = function(ms) {
     console.log("受け取ったデータ = " + ms.data);
-    isCommunicatable = true;
+    isCommunicateOK = true;
     orderData.flag = 0;
 
     var receivedData = JSON.parse(ms.data);
@@ -47,9 +49,10 @@ con.onmessage = function(ms) {
         case REQUEST.connect:
             if (scratchID == receivedData[DATA_NAME.scratch_ID]) {
                 setSensorData(receivedData);
-                isConnectOK = true;
+                isConnectSuccess = true;
             } else {
-                isConnectOK = false;
+                isConnectSuccess = false;
+                isAccessRetry = false;
             }
             break;
     }  
@@ -62,13 +65,14 @@ window.addEventListener("beforeunload", function(e) {
 }, false);
 
 function sendData(request_num) {
-    if (isCommunicatable == false) return;
+    if (isCommunicateOK == false) return;
+    if (request_num == REQUEST.connect && isConnectSuccess == false && isAccessRetry == false) return;
 
     orderData.request_num = request_num;
     console.log('送るデータ:' + JSON.stringify(orderData));
     try {
         con.send(JSON.stringify(orderData));
-        isCommunicatable = false;
+        isCommunicateOK = false;
     } catch (error) {
         console.log(error);
     }
@@ -454,7 +458,7 @@ class Scratch3NewBlocks {
     }
 
     isConnect () {
-        return isConnectOK;
+        return isConnectSuccess;
     }
 
     setID (args) {
@@ -462,6 +466,7 @@ class Scratch3NewBlocks {
         console.log("num = " + smartphoneID);
             orderData.smartphone_ID = smartphoneID;
         console.log('ID = ' + orderData.smartphone_ID);
+        isAccessRetry = true;
     }
 
     setImage (args) {
