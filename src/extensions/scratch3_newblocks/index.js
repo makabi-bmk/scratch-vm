@@ -5,6 +5,7 @@ const log = require('../../util/log');
 const header = require('./header');
 
 var scratchID = 0;
+var isConnectOK = false;
 var isCommunicatable = true;
 var sensorData = header.sensorData;
 var orderData = header.orderData;
@@ -44,15 +45,21 @@ con.onmessage = function(ms) {
             console.log("scratchID = " + orderData.scratch_ID);
             break;
         case REQUEST.connect:
-            setSensorData(receivedData);
+            if (scratchID == receivedData[DATA_NAME.scratch_ID]) {
+                setSensorData(receivedData);
+                isConnectOK = true;
+            } else {
+                isConnectOK = false;
+            }
             break;
     }  
 };
 
-window.onbeforeunload = function(e) {
-    e.returnValue = "ページを離れようとしています。よろしいですか？";
+window.addEventListener("beforeunload", function(e) {
+    sendData(REQUEST.close);
     con.close();
-}
+    //e.returnValue = "ページを移動します";
+}, false);
 
 function sendData(request_num) {
     if (isCommunicatable == false) return;
@@ -137,6 +144,11 @@ class Scratch3NewBlocks {
             menuIconURI: menuIconURI,
             blockIconURI: blockIconURI,
             blocks: [
+                {
+                    opcode: 'isConnect',
+                    text: '接続に成功した',
+                    blockType: BlockType.BOOLEAN,
+                },
                 {
                     opcode: 'setID',
                     blockType: BlockType.COMMAND,
@@ -441,13 +453,14 @@ class Scratch3NewBlocks {
         };
     }
 
+    isConnect () {
+        return isConnectOK;
+    }
+
     setID (args) {
         var smartphoneID = Cast.toNumber(args.smartphoneID);
         console.log("num = " + smartphoneID);
-        //IDが0~50の範囲の場合IDを上書きする
-        if (0 < smartphoneID && smartphoneID <= 50) {
             orderData.smartphone_ID = smartphoneID;
-        }
         console.log('ID = ' + orderData.smartphone_ID);
     }
 

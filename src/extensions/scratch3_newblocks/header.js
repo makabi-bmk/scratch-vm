@@ -6,7 +6,8 @@ module.exports.TYPE = {
 module.exports.REQUEST = {
     none : 0,
     getID : 1,
-    connect : 2
+    connect : 2,
+    close : 3
 };
 
 module.exports.DATA_NAME = {
