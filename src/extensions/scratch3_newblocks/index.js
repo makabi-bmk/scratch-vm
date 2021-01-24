@@ -15,7 +15,7 @@ const DATA_NAME = header.DATA_NAME;
 const REQUEST = header.REQUEST;
 
 // 拡張機能が呼び出されたときにwebsocketでの通信を開始する
-const con = new WebSocket('ws://172.20.10.4:8081');
+const con = new WebSocket('ws://172.20.10.5:8081');
 try {
     con.onopen = function() {
         console.log('coを開始しました');
